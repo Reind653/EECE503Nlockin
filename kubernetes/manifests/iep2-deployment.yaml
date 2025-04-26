@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iep2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iep2
+  template:
+    metadata:
+      labels:
+        app: iep2
+    spec:
+      containers:
+      - name: iep2
+        image: rib13/lock-in-iep2:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5004
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: anthropic-api-key
+        - name: LLM_MODEL
+          value: "claude-3-7-sonnet-20250219"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iep2
+spec:
+  selector:
+    app: iep2
+  ports:
+  - port: 5004
+    targetPort: 5004
+  type: ClusterIP 

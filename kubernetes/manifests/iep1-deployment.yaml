@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iep1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iep1
+  template:
+    metadata:
+      labels:
+        app: iep1
+    spec:
+      containers:
+      - name: iep1
+        image: rib13/lock-in-iep1:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-api-key
+        - name: LLM_MODEL
+          value: "gpt-4-1106-preview"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iep1
+spec:
+  selector:
+    app: iep1
+  ports:
+  - port: 5001
+    targetPort: 5001
+  type: ClusterIP 

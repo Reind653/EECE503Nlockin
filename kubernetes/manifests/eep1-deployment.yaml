@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eep1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eep1
+  template:
+    metadata:
+      labels:
+        app: eep1
+    spec:
+      containers:
+      - name: eep1
+        image: rib13/lock-in-eep1:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: IEP1_URL
+          value: "http://iep1:5001"
+        - name: IEP2_URL
+          value: "http://iep2:5004"
+        - name: IEP3_URL
+          value: "http://iep3:5003"
+        - name: IEP4_URL
+          value: "http://iep4:5005"
+        volumeMounts:
+        - name: eep1-storage
+          mountPath: /app/storage
+        - name: eep1-persistence
+          mountPath: /app/persistence
+      volumes:
+      - name: eep1-storage
+        emptyDir: {}
+      - name: eep1-persistence
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eep1
+spec:
+  selector:
+    app: eep1
+  ports:
+  - port: 5000
+    targetPort: 5000
+  type: ClusterIP 

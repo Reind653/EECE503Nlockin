@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+      - name: ui
+        image: rib13/lock-in-ui:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5002
+        env:
+        - name: EEP1_URL
+          value: "http://eep1:5000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+spec:
+  selector:
+    app: ui
+  ports:
+  - port: 5002
+    targetPort: 5002
+  type: NodePort 
