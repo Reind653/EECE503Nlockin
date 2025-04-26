@@ -1,0 +1,36 @@
+[
+  {
+    "original": {
+      "day": "Monday",
+      "description": "Test Task",
+      "duration": 60,
+      "end_time": "10:00",
+      "id": "test_event_1",
+      "location": "Test Location",
+      "start_time": "09:00",
+      "type": "task"
+    },
+    "formatted": {
+      "summary": "Test Task",
+      "location": "Test Location",
+      "description": "Event Type: task\nCreated by Lock-In Scheduler",
+      "start": {
+        "dateTime": "2025-04-21T09:00:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-21T10:00:00",
+        "timeZone": "America/New_York"
+      },
+      "reminders": {
+        "useDefault": true
+      },
+      "extendedProperties": {
+        "private": {
+          "originalEvent": "{\"day\": \"Monday\", \"description\": \"Test Task\", \"duration\": 60, \"end_time\": \"10:00\", \"id\": \"test_event_1\", \"location\": \"Test Location\", \"start_time\": \"09:00\", \"type\": \"task\"}"
+        }
+      }
+    },
+    "timestamp": "2025-04-24T04:35:16.627390"
+  }
+]

@@ -1,0 +1,11 @@
+flask==2.3.3
+flask-cors==4.0.0
+requests==2.31.0
+python-dotenv==1.0.0
+google-auth==2.23.0
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.97.0
+prometheus-flask-exporter==0.22.4
+prometheus-client==0.17.1
+psutil==5.9.5

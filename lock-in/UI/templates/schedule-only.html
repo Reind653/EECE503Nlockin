@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}Your Optimized Schedule{% endblock %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}" />
+<style>
+  .container-schedule {
+    margin: 0 auto;
+    max-width: 1500px;
+    padding: 20px;
+  }
+  .schedule-content {
+    display: flex;
+    justify-content: center;
+    text-align: left;
+    flex-wrap: wrap;
+  }
+  .schedule-wrapper {
+    flex: 1;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    max-width: 1200px;
+    margin-bottom: 20px;
+  }
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .schedule-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+  }
+  .btn-primary {
+    background-color: #4285f4;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #3367d6;
+  }
+  .btn-secondary {
+    background-color: #f1f3f4;
+    color: #202124;
+  }
+  .btn-secondary:hover {
+    background-color: #e8eaed;
+  }
+  .reset-button {
+    background-color: #ea4335;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .reset-button:hover {
+    background-color: #d33426;
+  }
+  .loading {
+    text-align: center;
+    padding: 30px;
+    font-size: 18px;
+    color: #4285f4;
+    background-color: rgba(66, 133, 244, 0.1);
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+  .loading::after {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 3px solid #4285f4;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .error-message {
+    text-align: center;
+    padding: 20px;
+    color: #ea4335;
+    background-color: rgba(234, 67, 53, 0.1);
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+  
+  /* Chat Interface Styles */
+  .chat-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .chat-header {
+    background-color: #4285f4;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+  }
+  .message {
+    margin-bottom: 15px;
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+  }
+  .user-message {
+    background-color: #e1f5fe;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+  }
+  .assistant-message {
+    background-color: #ffffff;
+    border-bottom-left-radius: 4px;
+  }
+  .chat-input-container {
+    display: flex;
+    padding: 10px;
+    background-color: #fff;
+    border-top: 1px solid #e0e0e0;
+  }
+  .chat-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 24px;
+    margin-right: 10px;
+    font-size: 14px;
+  }
+  .chat-send-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 0 20px;
+    cursor: pointer;
+  }
+  .chat-done-btn {
+    background-color: #0F9D58;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 8px 16px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+  }
+  .chat-done-btn::before {
+    content: '✓';
+    margin-right: 5px;
+    font-size: 16px;
+  }
+  .chat-instructions {
+    font-size: 12px;
+    color: #5f6368;
+    padding: 5px 10px;
+    text-align: right;
+    font-style: italic;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-schedule">
+  <!-- Updated header section with improved design for schedule-only.html -->
+  <div class="header-container">
+    <h1>My Weekly Schedule</h1>
+    <div class="schedule-note" style="margin-bottom: 15px; padding: 10px; background-color: #e8f0fe; border-radius: 4px; border-left: 4px solid #4285f4;">
+      <p style="margin: 0; color: #1a73e8;"><strong>Note:</strong> Use the Schedule Assistant below to make changes, then click <strong>Done</strong> when finished to enable Google Calendar export.</p>
+    </div>
+    <div class="schedule-actions">
+      <div class="export-btn-container" style="position: relative; display: inline-block;">
+        <button id="exportToGoogleBtn" onclick="exportToGoogleCalendar()" class="btn btn-primary" style="background-color: #0F9D58; opacity: 0.6; cursor: not-allowed;" disabled>Export to Google Calendar</button>
+        <div id="exportTooltip" class="tooltip" style="position: absolute; bottom: -40px; left: 0; background-color: #f8f9fa; padding: 8px 12px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 240px; display: none; z-index: 100; font-size: 13px; color: #5f6368; border: 1px solid #e5e5e5;">
+          Please click "Done" in the chat to finalize your schedule before exporting.
+        </div>
+      </div>
+      <button onclick="resetScheduleUI()" class="reset-button">Reset Schedule</button>
+    </div>
+  </div>
+  <div class="schedule-content">
+    <div id="scheduleContainer" class="schedule-wrapper">
+      <div id="scheduleOutput"></div>
+    </div>
+  </div>
+  
+  <!-- Chat Interface -->
+  <div class="chat-container">
+    <div class="chat-header">
+      <h3>Schedule Assistant</h3>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="message assistant-message">
+        Hello! I'm your schedule assistant. How would you like me to modify your schedule? 
+        You can ask me to add, remove, or change meetings and tasks. <br><br>
+        When you're finished making changes, please click the <strong>Done</strong> button to finalize your schedule and enable Google Calendar export.
+      </div>
+    </div>
+    <div class="chat-input-container">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Type your message here..." 
+             onkeypress="if(event.key === 'Enter') sendChatMessage()">
+      <button onclick="sendChatMessage()" class="chat-send-btn">Send</button>
+      <button onclick="finalizeChat()" class="chat-done-btn">Done</button>
+    </div>
+    <div class="chat-instructions">
+      Click "Done" when you've completed your conversation to enable exporting to Google Calendar.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- force reload of updated main.js -->
+<script src="{{ url_for('static', filename='js/main.js') }}?v=2"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/get-schedule')
+      .then(response => response.json())
+      .then(data => {
+        if (data.schedule && (data.schedule.generated_calendar || data.schedule.meetings || data.schedule.tasks)) {
+          localStorage.setItem('currentSchedule', JSON.stringify(data.schedule));
+          processSchedule(data.schedule);
+        } else {
+          localStorage.removeItem('currentSchedule');
+          window.location.href = '/';
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching schedule from server:', err);
+        window.location.href = '/';
+      });
+      
+    // Load chat history
+    loadChatHistory();
+  });
+
+  function processSchedule(raw) {
+    console.log('🔍 raw schedule-only JSON:', raw);
+    // Use raw.schedule if present and if it has a generated_calendar; otherwise, use raw directly
+    const sched = (raw && raw.schedule && raw.schedule.generated_calendar) ? raw.schedule : raw;
+    // If no valid schedule object (neither a generated_calendar nor meetings/tasks), redirect
+    if (!sched || (!sched.generated_calendar && !sched.meetings && !sched.tasks)) {
+      console.warn('No valid schedule found. Redirecting to schedule generation page.');
+      window.location.href = '/';
+      return;
+    }
+    console.log('✅ using schedule object for calendar:', sched);
+    // If a generated_calendar exists, display the formatted calendar; otherwise, use the simple schedule view
+    if (sched.generated_calendar) {
+      displayFormattedSchedule(sched);
+    } else {
+      displaySimpleSchedule({ schedule: sched });
+    }
+    
+    // Fallback: if nothing is rendered in scheduleOutput after 3 seconds, show an error message
+    setTimeout(() => {
+      const outputEl = document.getElementById('scheduleOutput');
+      if (!outputEl.innerHTML.trim()) {
+        console.error('No content rendered in scheduleOutput after processing schedule.');
+        outputEl.innerHTML = '<div class="error-message">No schedule content loaded. Please generate a new schedule.</div>';
+      }
+    }, 3000);
+  }
+</script>
+
+<script>
+  // Chat functionality
+  function loadChatHistory() {
+    fetch('/get-chat-history')
+      .then(response => response.json())
+      .then(data => {
+        const chatMessages = document.getElementById('chatMessages');
+        
+        // Clear existing messages except the welcome message
+        const welcomeMessage = chatMessages.firstElementChild;
+        chatMessages.innerHTML = '';
+        chatMessages.appendChild(welcomeMessage);
+        
+        // Add messages from history
+        if (data.chat_history && data.chat_history.length > 0) {
+          data.chat_history.forEach(message => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.role}-message`;
+            messageDiv.textContent = message.content;
+            chatMessages.appendChild(messageDiv);
+          });
+          
+          // Scroll to bottom
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+      })
+      .catch(error => console.error('Error loading chat history:', error));
+  }
+  
+  function sendChatMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to UI
+    const chatMessages = document.getElementById('chatMessages');
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.className = 'message user-message';
+    userMessageDiv.textContent = message;
+    chatMessages.appendChild(userMessageDiv);
+    
+    // Clear input
+    chatInput.value = '';
+    
+    // Show loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message assistant-message';
+    loadingDiv.textContent = 'Thinking...';
+    loadingDiv.id = 'loadingMessage';
+    chatMessages.appendChild(loadingDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Send to server
+    fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading indicator
+      const loadingMessage = document.getElementById('loadingMessage');
+      if (loadingMessage) loadingMessage.remove();
+      
+      // Add assistant response to UI
+      if (data.response) {
+        const assistantMessageDiv = document.createElement('div');
+        assistantMessageDiv.className = 'message assistant-message';
+        assistantMessageDiv.textContent = data.response;
+        chatMessages.appendChild(assistantMessageDiv);
+      }
+      
+      // Update schedule if provided
+      if (data.schedule) {
+        localStorage.setItem('currentSchedule', JSON.stringify(data.schedule));
+        processSchedule(data.schedule);
+      }
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    })
+    .catch(error => {
+      console.error('Error sending message:', error);
+      
+      // Remove loading indicator
+      const loadingMessage = document.getElementById('loadingMessage');
+      if (loadingMessage) loadingMessage.remove();
+      
+      // Show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'message assistant-message';
+      errorDiv.textContent = 'Sorry, there was an error processing your request. Please try again.';
+      chatMessages.appendChild(errorDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+  }
+  
+  function finalizeChat() {
+    // Show loading indicator
+    const chatMessages = document.getElementById('chatMessages');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message assistant-message';
+    loadingDiv.textContent = 'Finalizing and updating your preferences...';
+    loadingDiv.id = 'loadingMessage';
+    chatMessages.appendChild(loadingDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Send to server
+    fetch('/finalize-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading indicator
+      const loadingMessage = document.getElementById('loadingMessage');
+      if (loadingMessage) loadingMessage.remove();
+      
+      // Add confirmation message
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'message assistant-message';
+      confirmDiv.innerHTML = '<strong>Chat session complete!</strong> Your preferences have been updated based on our conversation.<br><br>The <strong>Export to Google Calendar</strong> button is now enabled. You can export your schedule to Google Calendar.';
+      chatMessages.appendChild(confirmDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      // Enable the export to Google Calendar button
+      const exportButton = document.getElementById('exportToGoogleBtn');
+      if (exportButton) {
+        exportButton.disabled = false;
+        exportButton.style.opacity = '1';
+        exportButton.style.cursor = 'pointer';
+        
+        // Add a quick highlight animation to draw attention to the export button
+        exportButton.style.transition = 'all 0.3s ease';
+        exportButton.style.transform = 'scale(1.1)';
+        exportButton.style.boxShadow = '0 0 10px rgba(15, 157, 88, 0.5)';
+        
+        setTimeout(() => {
+          exportButton.style.transform = 'scale(1)';
+          exportButton.style.boxShadow = 'none';
+        }, 1000);
+      }
+      
+      // Hide the chat interface after a short delay
+      setTimeout(() => {
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+          chatContainer.style.display = 'none';
+        }
+        
+        // Store a flag in localStorage to indicate chat is hidden and finalized
+        localStorage.setItem('chatHidden', 'true');
+        localStorage.setItem('chatFinalized', 'true');
+      }, 5000);  // Increased delay to 5 seconds so users can read the message
+    })
+    .catch(error => {
+      console.error('Error finalizing chat:', error);
+      
+      // Remove loading indicator
+      const loadingMessage = document.getElementById('loadingMessage');
+      if (loadingMessage) loadingMessage.remove();
+      
+      // Show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'message assistant-message';
+      errorDiv.textContent = 'Sorry, there was an error finalizing the chat. Please try again later.';
+      chatMessages.appendChild(errorDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+  }
+
+  // Add event listener for page load to check if chat should be hidden
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if chat was previously hidden
+    const chatHidden = localStorage.getItem('chatHidden');
+    if (chatHidden === 'true') {
+      const chatContainer = document.querySelector('.chat-container');
+      if (chatContainer) {
+        chatContainer.style.display = 'none';
+      }
+    }
+    
+    // Check if chat was finalized to determine if export button should be enabled
+    const chatFinalized = localStorage.getItem('chatFinalized');
+    const exportButton = document.getElementById('exportToGoogleBtn');
+    if (exportButton && chatFinalized === 'true') {
+      exportButton.disabled = false;
+      exportButton.style.opacity = '1';
+      exportButton.style.cursor = 'pointer';
+    }
+  });
+  
+  // Override the resetScheduleUI function to show chat again after reset
+  function resetScheduleUI() {
+    if (confirm('Are you sure you want to reset your schedule? This cannot be undone.')) {
+      const scheduleOutput = document.getElementById('scheduleOutput');
+      scheduleOutput.innerHTML = '<div class="loading">Resetting your schedule...</div>';
+      
+      fetch('/reset-schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(data => {
+            throw new Error(data.error || 'Failed to reset schedule');
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        localStorage.removeItem('currentSchedule');
+        // Remove the chatHidden flag so chat will be shown on the new page
+        localStorage.removeItem('chatHidden');
+        // Remove the chatFinalized flag so export button will be disabled again
+        localStorage.removeItem('chatFinalized');
+        window.location.href = '/';
+      })
+      .catch(error => {
+        console.error('Error resetting schedule:', error);
+        scheduleOutput.innerHTML = `<div class="error-message">${error.message || 'Failed to reset schedule. Please try again.'}</div>`;
+      });
+    }
+  }
+
+  function exportToGoogleCalendar() {
+    const scheduleOutput = document.getElementById('scheduleOutput');
+    const exportingMessage = document.createElement('div');
+    exportingMessage.className = 'loading';
+    exportingMessage.textContent = 'Exporting your schedule to Google Calendar...';
+    scheduleOutput.appendChild(exportingMessage);
+    
+    fetch('/google-calendar/export-to-google', {
+      method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+      exportingMessage.remove();
+      
+      if (data.auth_url) {
+        window.location.href = data.auth_url;
+      } else if (data.success) {
+        alert('Successfully exported schedule to Google Calendar!');
+      } else {
+        throw new Error(data.error || 'Unknown error during export');
+      }
+    })
+    .catch(error => {
+      console.error('Error exporting to Google Calendar:', error);
+      exportingMessage.remove();
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = error.message || 'Failed to export to Google Calendar. Please try again.';
+      scheduleOutput.appendChild(errorDiv);
+    });
+  }
+
+  // Add this function to check if chat is finalized
+  function checkChatFinalized() {
+    const chatFinalized = localStorage.getItem('chatFinalized') === 'true';
+    const exportToGoogleBtn = document.getElementById('exportToGoogleBtn');
+    const exportTooltip = document.getElementById('exportTooltip');
+    
+    if (chatFinalized) {
+      exportToGoogleBtn.removeAttribute('disabled');
+      exportToGoogleBtn.style.opacity = '1';
+      exportToGoogleBtn.style.cursor = 'pointer';
+      if (exportTooltip) exportTooltip.style.display = 'none';
+    } else {
+      exportToGoogleBtn.setAttribute('disabled', 'disabled');
+      exportToGoogleBtn.style.opacity = '0.5';
+      exportToGoogleBtn.style.cursor = 'not-allowed';
+      if (exportTooltip) exportTooltip.style.display = 'block';
+    }
+  }
+  
+  // Run the check on page load
+  checkChatFinalized();
+  
+  // Show/hide tooltip on hover
+  document.addEventListener('DOMContentLoaded', function() {
+    const exportBtn = document.getElementById('exportToGoogleBtn');
+    const exportTooltip = document.getElementById('exportTooltip');
+    
+    if (exportBtn && exportTooltip) {
+      exportBtn.addEventListener('mouseover', function() {
+        if (this.disabled) {
+          exportTooltip.style.display = 'block';
+        }
+      });
+      
+      exportBtn.addEventListener('mouseout', function() {
+        exportTooltip.style.display = 'none';
+      });
+    }
+  });
+</script>
+{% endblock %}
